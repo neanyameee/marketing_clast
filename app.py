@@ -19,51 +19,18 @@ numeric_features = ['Purchase_Frequency', 'Average_Order_Value',
 
 categorical_features = ['Season', 'Preferred_Purchase_Times', 'Retention_Strategy']
 
-# Если модели нет - обучаем
-if not os.path.exists(model_path):
-    st.info("📊 Обучение модели...")
-    
-    df = pd.read_csv('data/customers.csv')
-    
-    # Кодируем категориальные признаки
-    encoders = {}
-    df_encoded = df.copy()
-    
-    for col in categorical_features:
-        le = LabelEncoder()
-        df_encoded[col] = le.fit_transform(df_encoded[col].astype(str))
-        encoders[col] = le
-    
-    # Все признаки для обучения
-    all_features = numeric_features + categorical_features
-    X = df_encoded[all_features].fillna(df_encoded[all_features].median())
-    
-    # Масштабируем
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
-    
-    # Обучаем KMeans
-    model = KMeans(n_clusters=2, random_state=42, n_init=10)
-    model.fit(X_scaled)
-    
-    # Сохраняем
-    joblib.dump(model, model_path)
-    joblib.dump(scaler, scaler_path)
-    joblib.dump(encoders, encoders_path)
-    
-    st.success("✅ Модель обучена!")
-else:
-    model = joblib.load(model_path)
-    scaler = joblib.load(scaler_path)
-    encoders = joblib.load(encoders_path)
+# загрузка обученной модели
+model = joblib.load(model_path)
+scaler = joblib.load(scaler_path)
+encoders = joblib.load(encoders_path)
 
-# ========== ИНТЕРФЕЙС ==========
+# ИНТЕРФЕЙС
 st.sidebar.header("Данные клиента")
 
 # Числовые признаки
 st.sidebar.subheader("Числовые данные")
-freq = st.sidebar.number_input("Частота покупок", min_value=1, max_value=50, value=10)
-avg_order = st.sidebar.number_input("Средний чек ($)", min_value=10, max_value=500, value=100)
+freq = st.sidebar.number_input("Частота покупок (в месяц)", min_value=1, max_value=50, value=10)
+avg_order = st.sidebar.number_input("Средний чек (в долларах)", min_value=10, max_value=500, value=100)
 time_between = st.sidebar.number_input("Дней между покупками", min_value=1, max_value=365, value=30)
 churn = st.sidebar.slider("Вероятность оттока", 0.0, 1.0, 0.5)
 ltv = st.sidebar.number_input("Lifetime Value ($)", min_value=100, max_value=10000, value=2000)
@@ -100,8 +67,8 @@ if st.sidebar.button("Определить кластер"):
     st.subheader("Результат кластеризации:")
     
     if cluster == 0:
-        st.success(" Активный клиент")
-        st.info(" Рекомендация: Программа лояльности, персональные предложения")
+        st.success("Активный клиент")
+        st.info("Рекомендация: Программа лояльности, персональные предложения")
     else:
-        st.warning(" Неактивный клиент")
-        st.info(" Рекомендация: Скидки, ремаркетинг, вовлекающие акции")
+        st.warning("Неактивный клиент")
+        st.info("Рекомендация: Скидки, ремаркетинг, вовлекающие акции")
